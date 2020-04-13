@@ -1,0 +1,36 @@
+const int switchPin = A0;    // button pin
+const int motor1Pin = 3;    // H-Bridge pin 2
+const int motor2Pin = 4;    // H-Bridge pin 7
+const int enablePin = 9;// H-Bridge pin 8 - enable pin
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  //designate button as input
+  pinMode(switchPin,INPUT);
+
+  //designate motor as output
+  pinMode(motor1Pin,OUTPUT);
+  pinMode(motor2Pin,OUTPUT);
+
+  //make sure motor turns on
+  pinMode(enablePin,OUTPUT);
+  digitalWrite(enablePin,HIGH);
+  
+}
+
+
+void loop() {
+  //change direction of motor rotation when button is pressed
+  int readThing = analogRead(switchPin);
+  if(analogRead(switchPin)==HIGH)
+  {
+    analogWrite(motor1Pin,0);
+    analogWrite(motor2Pin,readThing);
+  }
+  else{ 
+    analogWrite(motor1Pin,analogRead(switchPin));
+    analogWrite(motor2Pin,0);
+  }
+  Serial.println(readThing);
+}
