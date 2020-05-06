@@ -1,0 +1,132 @@
+/*
+This P5 sketch is a template for getting started with Serial Communication. 
+The SerialEvent callback is where incoming data is received 
+
+
+By Arielle Hein, adapted from ITP Phys Comp Serial Labs
+Edited March 12 2019
+
+*/
+
+
+var serial; //variable to hold an instance of the serial port library
+var portName = '/dev/cu.usbmodem14201'; //fill in with YOUR port
+
+var t = [];
+var min = 0;
+var hours;
+var min_1;
+var min_2;
+
+function setup() {
+  createCanvas(400, 400);
+
+  serial = new p5.SerialPort(); //a new instance of serial port library
+
+  //set up events for serial communication
+  serial.on('connected', serverConnected);
+  serial.on('open', portOpen);
+  serial.on('data', serialEvent);
+  serial.on('error', serialError);
+  serial.on('close', portClose);
+
+  //open our serial port
+  serial.open(portName);
+
+
+}
+
+function draw() {
+  background(0);
+  fill(255);
+  //text(hour()%12,10,50);
+  fill(0);
+  noStroke();
+
+  fill(255);
+  ellipse(200, 200, 300, 300);
+  fill(200, 25, 60);
+  arc(200, 200, 300, 300, 1.5 * PI, ((hour() % 12) / 6 * PI - HALF_PI + 0.0001));
+
+  fill(0);
+  ellipse(200, 200, 250, 250);
+
+  fill(255);
+  ellipse(200, 200, 200, 200);
+  fill(60, 200, 25);
+  arc(200, 200, 200, 200, 1.5 * PI, (minute() / 30 * PI - HALF_PI + 0.0001));
+
+  fill(0);
+  ellipse(200, 200, 150, 150);
+
+  fill(255);
+  ellipse(200, 200, 100, 100);
+  fill(25, 60, 200);
+  arc(200, 200, 100, 100, 1.5 * PI, (second() / 30 * PI - HALF_PI + 0.0001));
+
+  fill(0);
+  ellipse(200, 200, 50, 50);
+
+  fill(255);
+  textAlign(RIGHT);
+  text(hour() % 12, 184.6, 380);
+  text(":", 190, 380);
+  textAlign(CENTER);
+  text(minute(), 200, 380);
+  text(":", 210, 380);
+  textAlign(LEFT);
+  text(second(), 213.5, 380);
+  min = str(minute());
+  min_num1 = int(min[0]);
+  min_num2 = int(min[1]);
+
+  if (min_num2 === 'undefined') {
+    min_num1 = 0;
+    min_num2 = int(min[0]);
+  } else {
+    min_num1 = int(min[0]);
+  }
+  console.log((hour() - 12));
+  console.log(min_num1);
+  console.log(min_num2);
+  //serial.write(min_num1);
+  //serial.write(min_num2);
+  serial.write((min_num1) + "," + (min_num2) + "," + (hour()));
+
+}
+
+
+//all my callback functions are down here:
+//these are useful for giving feedback
+
+function serverConnected() {
+  console.log('connected to the server');
+}
+
+function portOpen() {
+  console.log('the serial port opened!');
+}
+
+//THIS IS WHERE WE RECEIVE DATA!!!!!!
+//make sure you're reading data based on how you're sending from arduino
+function serialEvent() {
+  //receive serial data here
+
+}
+
+function serialError(err) {
+  console.log('something went wrong with the port. ' + err);
+}
+
+function portClose() {
+  console.log('the port was closed');
+}
+
+// get the list of ports:
+function printList(portList) {
+  // portList is an array of serial port names
+  for (var i = 0; i < portList.length; i++) {
+    // Display the list the console:
+    print(i + " " + portList[i]);
+  }
+}
