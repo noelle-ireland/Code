@@ -1,0 +1,226 @@
+/* 
+ * TimeSerial.pde
+ * example code illustrating Time library set through serial port messages.
+ *
+ * Messages consist of the letter T followed by ten digit time (as seconds since Jan 1 1970)
+ * you can send the text on the next line using Serial Monitor to set the clock to noon Jan 1 2013
+ T1357041600  
+ *
+ * A Processing example sketch to automatically send the messages is included in the download
+ * On Linux, you can use "date +T%s\n > /dev/ttyACM0" (UTC time zone)
+ */ 
+#include <Adafruit_NeoPixel.h>
+
+#include <TimeLib.h>
+
+Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(24, 3, NEO_GRB + NEO_KHZ800); // init strip
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(12, 6, NEO_GRB + NEO_KHZ800); // init strip
+Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(20, 9, NEO_GRB + NEO_KHZ800); // init strip
+
+// digital pin 2 has a pushbutton attached to it. Give it a name:
+int pushButton1 = 2;
+int pushButton2 = 4;
+int pushButton3 = 7;
+
+
+#define TIME_HEADER  "T"   // Header tag for serial time sync message
+#define TIME_REQUEST  7    // ASCII bell character requests a time sync message 
+int min_1;
+int min_2;
+int str_all_min;
+int all_min;
+int int_min_1;
+int int_min_2;
+int hour_1;
+
+void setup()  {
+  Serial.begin(9600);
+  while (!Serial) ; // Needed for Leonardo only
+  pinMode(13, OUTPUT);
+  setSyncProvider(requestSync);  //set function to call when sync required
+  Serial.println("Waiting for sync message");
+  
+  
+  //button info first one//
+  pinMode(pushButton1, INPUT);
+  // define pin 3 as output:
+  pinMode(3, OUTPUT);
+  strip1.begin(); // startin our LEF Strip
+  strip1.show(); // init all pixels to "off"
+
+  //button info secont one//
+  pinMode(pushButton2, INPUT);
+  // define pin 3 as output:
+  pinMode(6, OUTPUT);
+  strip2.begin(); // startin our LEF Strip
+  strip2.show(); // init all pixels to "off"
+
+  //button info turd one//
+  pinMode(pushButton3, INPUT);
+  // define pin 3 as output:
+  pinMode(9, OUTPUT);
+  strip3.begin(); // startin our LEF Strip
+  strip3.show(); // init all pixels to "off"
+}
+
+void loop(){   
+ //button 1//
+  
+  if (Serial.available()) {
+    processSyncMessage();
+  }
+  if (timeStatus()!= timeNotSet) {
+    digitalClockDisplay();  
+  }
+
+  int buttonState1 = digitalRead(pushButton1);
+  if (timeStatus() == timeSet) {
+     for(int i=0; i<strip1.numPixels(); i++){
+      // strip.setPixelColor(index, red, green, blue)
+        if(buttonState1 == HIGH){
+          strip1.setPixelColor(i,255,255,0); // set pixel to blue
+          strip1.setPixelColor((hour_1)*2-1,255,0,0); // set pixel to blue
+          strip1.setPixelColor((hour_1)*2-2,255,0,0); // set pixel to blue
+          strip1.show(); //update the strip
+        } // LED on if synced 
+        if(buttonState1 == LOW){
+          strip1.setPixelColor(i,0,0,0); // set pixel to blue
+          strip1.show(); //update the strip
+        }
+     }
+  }
+  Serial.println(buttonState1);
+  
+  
+  delay(1000);
+
+  //button 2//
+  int buttonState2 = digitalRead(pushButton2);
+  if (timeStatus() == timeSet) {
+    for(int i=0; i<strip1.numPixels(); i++){
+      if(buttonState2 == HIGH){
+        //digitalWrite(13,HIGH);
+      
+        strip2.setPixelColor(i,255,255,0); // set pixel to blue
+        strip2.setPixelColor((int_min_1)*2-1,255,0,0); // set pixel to blue
+        strip2.setPixelColor((int_min_1)*2-2,255,0,0); // set pixel to blue
+        strip2.show(); //update the strip
+      }
+    
+      if(buttonState2 == LOW){
+        //digitalWrite(13,LOW);
+        strip2.setPixelColor(i,0,0,0); // set pixel to blue
+        strip2.show(); //update the strip
+      }  
+    }
+   }
+  
+     /*for(int i=0; i<strip2.numPixels(); i++){
+      // strip.setPixelColor(index, red, green, blue)
+        if(buttonState2 == HIGH){
+          strip2.setPixelColor(i,0,0,255); // set pixel to blue
+          strip2.setPixelColor(0,255,0,0); // set pixel to blue
+          strip2.show(); //update the strip
+        } // LED on if synced 
+        if(buttonState2 == LOW){
+          strip2.setPixelColor(i,0,0,0); // set pixel to blue
+          strip2.show(); //update the strip
+        }*/
+     // }
+    // }
+  
+  delay(1000);
+  
+  //button three//
+  int buttonState3 = digitalRead(pushButton3);
+  if (Serial.available()) {
+    processSyncMessage();
+  }
+  if (timeStatus()!= timeNotSet) {
+    digitalClockDisplay();  
+  }
+  if (timeStatus() == timeSet) {
+     for(int i=0; i<strip3.numPixels(); i++){
+        if(buttonState3 == HIGH){
+          strip3.setPixelColor(i,0,255,0); // set pixel to blue
+          strip3.setPixelColor((int_min_2)*2-1,0,0,255); // set pixel to blue
+          strip3.setPixelColor((int_min_2)*2-2,0,0,255); // set pixel to blue
+          strip3.show(); //update the strip
+        }
+    
+        if(buttonState3 == LOW){
+          strip3.setPixelColor(i,0,0,0); // set pixel to blue
+          strip3.show(); //update the strip
+      }  
+    }
+  }
+  delay(1000);
+  Serial.println("Button3");
+  Serial.print(buttonState3);
+  
+  
+  all_min=(minute());
+  String str_all_min = String(all_min);
+  //Serial.println(str_all_min);
+  String min_1_str = String(str_all_min.charAt(0));
+  //Serial.println(min_1_str);
+  String min_2_str =String(str_all_min.charAt(1));
+  //Serial.println(min_2_str);
+  
+  int_min_1 = min_1_str.toInt();
+  int_min_2 = min_2_str.toInt();
+  //Serial.println(int_min_1);
+  
+  hour_1 = hour();
+  if (hour_1 >12){
+    hour_1 -= 12;
+  }
+  
+
+  //Serial.println();
+ //Serial.println(int_min_2);
+ //Serial.println("ass cheeks");
+  }
+
+
+
+void digitalClockDisplay(){
+  // digital clock display of the time
+  Serial.print(hour());
+  printDigits(minute());
+  printDigits(second());
+  Serial.print(" ");
+  Serial.print(day());
+  Serial.print(" ");
+  Serial.print(month());
+  Serial.print(" ");
+  Serial.print(year()); 
+  Serial.println(); 
+}
+
+void printDigits(int digits){
+  // utility function for digital clock display: prints preceding colon and leading 0
+  Serial.print(":");
+  if(digits < 10)
+    Serial.print('0');
+  Serial.print(digits);
+}
+
+
+void processSyncMessage() {
+  unsigned long pctime;
+  const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
+
+  if(Serial.find(TIME_HEADER)) {
+     pctime = Serial.parseInt();
+     if( pctime >= DEFAULT_TIME) { // check the integer is a valid time (greater than Jan 1 2013)
+       setTime(pctime); // Sync Arduino clock to the time received on the serial port
+     }
+  }
+}
+
+time_t requestSync()
+{
+  Serial.write(TIME_REQUEST);  
+  return 0; // the time will be sent later in response to serial mesg
+}
